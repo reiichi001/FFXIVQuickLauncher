@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Addon;
@@ -32,6 +33,8 @@ namespace XIVLauncher.Settings
         bool? KeepPatches { get; set; }
         bool? HasComplainedAboutAdmin { get; set; }
         bool? HasComplainedAboutGShadeDxgi { get; set; }
+        bool? HasComplainedAboutGShadeOutOfDate { get; set; }
+        DateTime LastGShadeVersionCheckTimestamp { get; set; }
         string LastVersion { get; set; }
         AcquisitionMethod? PatchAcquisitionMethod { get; set; }
         bool? HasShownAutoLaunchDisclaimer { get; set; }

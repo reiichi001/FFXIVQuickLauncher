@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Windows;
 using CheapLoc;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using Serilog;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Util;
@@ -260,6 +263,113 @@ namespace XIVLauncher.Game
                     }
                 }
             }
+
+            if ((dxgi.Exists || d3d11.Exists || dinput8.Exists) && !App.Settings.HasComplainedAboutGShadeOutOfDate.GetValueOrDefault(false))
+            {
+                // If we can't guarantee it's GShade, don't even bother
+                var dxgiInfo = dxgi.Exists ? FileVersionInfo.GetVersionInfo(dxgi.FullName) : null;
+                var d3d11Info = d3d11.Exists ? FileVersionInfo.GetVersionInfo(d3d11.FullName) : null;
+                var dinput8Info = dinput8.Exists ? FileVersionInfo.GetVersionInfo(dinput8.FullName) : null;
+
+                if ((dxgiInfo.ProductName?.Equals("GShade", StringComparison.OrdinalIgnoreCase) == true ||
+                    d3d11Info.ProductName?.Equals("GShade", StringComparison.OrdinalIgnoreCase) == true ||
+                    dinput8Info.ProductName?.Equals("GShade", StringComparison.OrdinalIgnoreCase) == true) &&
+                    App.Settings.LastGShadeVersionCheckTimestamp.AddMinutes(30).ToUniversalTime() < DateTime.UtcNow)
+                {
+                    // make sure we open the x64 registry
+                    string gshaderegpath = @"SOFTWARE\GShade";
+                    var localMachineX64View = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+                    var gshadereg = localMachineX64View.OpenSubKey(gshaderegpath);
+
+                    // registry entry does not exist
+                    if (gshadereg == null)
+                    {
+                        Log.Debug("No registry entry for GShade found. XIVLauncher won't check anymore.");
+                        App.Settings.HasComplainedAboutGShadeOutOfDate = true;
+                        return; // if there's a better way to exit the if, we can switch to that.
+                    }
+                    Log.Debug("Found proof of GShade installation. Running manual version check on it.");
+
+                    // pull the key/value we want from the registry. This is what we'll use for version checking.
+                    var gshadeinstallver = gshadereg.GetValue("instver") ?? "";
+                    Log.Debug($"GShade Registry version: {gshadeinstallver}");
+
+                    // we should cache this
+                    string gshadevercheckurl = "https://api.github.com/repos/mortalitas/gshade/tags";
+
+                    // pull latest tags from github (adjust for cached response in future)
+                    List<GithubTagEntry> gshadetags;
+                    using var client = new HttpClient()
+                    {
+                        DefaultRequestHeaders =
+                        {
+                            UserAgent = { new ProductInfoHeaderValue("XIVLauncher", AppUtil.GetGitHash())}
+                        }
+                    };
+                    var request = new HttpRequestMessage(HttpMethod.Get, gshadevercheckurl);
+                    var resp = client.SendAsync(request).Result;
+                    resp.EnsureSuccessStatusCode();
+                    gshadetags = JsonConvert.DeserializeObject<List<GithubTagEntry>>(resp.Content.ReadAsStringAsync().Result);
+                    var latestgshade = gshadetags.FirstOrDefault();
+
+                    string ghtagver = latestgshade.name;
+                    Log.Debug($"Latest GShade tag: {ghtagver}");
+
+                    if ($"v{gshadeinstallver}" != ghtagver)
+                    {
+                        // version mismatch
+                        Log.Information("GShade version mismatch! Prompt to run the GShade updater.");
+
+
+                        if (CustomMessageBox.Builder
+                                        .NewFrom(Loc.Localize("GShadeOutOfDate",
+                                            "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This will exit XIVLauncher in order to continue."))
+                                        .WithButtons(MessageBoxButton.YesNo)
+                                        .WithImage(MessageBoxImage.Warning)
+                                        .WithParentWindow(parentWindow)
+                                        .Show() == MessageBoxResult.Yes)
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo();
+                            startInfo.CreateNoWindow = false;
+                            startInfo.UseShellExecute = true;
+                            startInfo.FileName = Environment.ExpandEnvironmentVariables(
+                                "%ProgramFiles%\\GShade\\GShade Control Panel.exe");
+                            startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                            startInfo.Arguments = "/U";
+                            startInfo.Verb = "runas";
+
+                            try
+                            {
+                                using (Process exeProcess = Process.Start(startInfo))
+                                {
+                                    // exeProcess.WaitForExit(); //GSHade won't run if XIVLauncher is.
+                                    Environment.Exit(0);
+                                }
+                                // Assume we updated or the user dismissed it. Set cooldown.
+                                App.Settings.LastGShadeVersionCheckTimestamp = DateTime.Now;
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Running GShade updater failed. Continuing with launch.");
+                            }
+                        }
+                        else
+                        {
+                            // disable the check. The user doesn't want it.
+                            App.Settings.HasComplainedAboutGShadeOutOfDate= true;
+                        }
+                    }
+                    else
+                    {
+                        Log.Information("Passed GShade version check.");
+                        // we should cache our last check time as cooldown
+                        App.Settings.LastGShadeVersionCheckTimestamp = DateTime.Now;
+                    }
+                }
+
+
+                
+            }
         }
 
         private static void ElevatedDelete(params FileInfo[] info)
@@ -335,4 +445,20 @@ namespace XIVLauncher.Game
             return true;
         }
     }
+
+    internal class GithubTagEntry
+    {
+        internal class GHTCommit
+        {
+            string sha { get; set; }
+            string url { get; set; }
+        }
+        public string name { get; set; }
+        public string zipball_url { get; set; }
+        public string tarball_url { get; set; }
+        public GHTCommit commit { get; set; }
+        public string node_id { get; set; }
+    }
+
+    
 }

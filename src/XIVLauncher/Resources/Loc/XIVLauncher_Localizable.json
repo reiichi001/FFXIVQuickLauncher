@@ -1114,5 +1114,9 @@
   "GShadeWrongMode": {
     "message": "You installed GShade in a mode that isn't optimal for use together with XIVLauncher. Do you want XIVLauncher to fix this for you?\n\nThis will not change your presets or settings, it will merely improve compatibility with XIVLauncher features.",
     "description": "ProblemCheck.RunCheck"
+  },
+  "GShadeOutOfDate": {
+    "message": "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This will exit XIVLauncher in order to continue.",
+    "description": "ProblemCheck.RunCheck"
   }
 }
