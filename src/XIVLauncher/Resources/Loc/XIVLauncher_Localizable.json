@@ -1116,7 +1116,7 @@
     "description": "ProblemCheck.RunCheck"
   },
   "GShadeOutOfDate": {
-    "message": "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This will exit XIVLauncher in order to continue.",
+    "message": "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This may need to exit XIVLauncher in order to continue.",
     "description": "ProblemCheck.RunCheck"
   }
 }

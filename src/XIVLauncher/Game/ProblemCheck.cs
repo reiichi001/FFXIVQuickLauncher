@@ -292,7 +292,8 @@ namespace XIVLauncher.Game
 
                     // pull the key/value we want from the registry. This is what we'll use for version checking.
                     var gshadeinstallver = gshadereg.GetValue("instver") ?? "";
-                    Log.Debug($"GShade Registry version: {gshadeinstallver}");
+                    Version.TryParse(gshadeinstallver.ToString(), out var localGshadeVersion);
+                    Log.Debug($"GShade Registry version: {localGshadeVersion}");
 
                     // we should cache this
                     string gshadevercheckurl = "https://api.github.com/repos/mortalitas/gshade/tags";
@@ -312,18 +313,19 @@ namespace XIVLauncher.Game
                     gshadetags = JsonConvert.DeserializeObject<List<GithubTagEntry>>(resp.Content.ReadAsStringAsync().Result);
                     var latestgshade = gshadetags.FirstOrDefault();
 
-                    string ghtagver = latestgshade.name;
-                    Log.Debug($"Latest GShade tag: {ghtagver}");
+                    Version.TryParse(latestgshade.name.Substring(1), out var remoteGshadeVersion);
+                    Log.Debug($"Latest GShade tag: {remoteGshadeVersion}");
 
-                    if ($"v{gshadeinstallver}" != ghtagver)
+                    if (localGshadeVersion < remoteGshadeVersion)
                     {
                         // version mismatch
                         Log.Information("GShade version mismatch! Prompt to run the GShade updater.");
 
 
+
                         if (CustomMessageBox.Builder
                                         .NewFrom(Loc.Localize("GShadeOutOfDate",
-                                            "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This will exit XIVLauncher in order to continue."))
+                                            "Your copy of GShade is out of date. This will result in it being disabled if you proceed to launch anyways, per GShade policies.\n\nWould you like to run the GShade updater before launching FFXIV? This may need to exit XIVLauncher in order to continue."))
                                         .WithButtons(MessageBoxButton.YesNo)
                                         .WithImage(MessageBoxImage.Warning)
                                         .WithParentWindow(parentWindow)
@@ -342,8 +344,19 @@ namespace XIVLauncher.Game
                             {
                                 using (Process exeProcess = Process.Start(startInfo))
                                 {
-                                    // exeProcess.WaitForExit(); //GSHade won't run if XIVLauncher is.
-                                    Environment.Exit(0);
+                                    // GShade 4.1.0 and earlier won't update if XIVLauncher is running.
+                                    if (localGshadeVersion <= Version.Parse("4.1.0")) 
+                                    {
+                                        Environment.Exit(0);
+                                    }
+
+                                    // GShade 4.1.1 and later will update.
+                                    exeProcess.WaitForExit(); 
+                                    var gshadeInstaller = Process.GetProcessesByName("GShade");
+                                    foreach (Process p in gshadeInstaller)
+                                    {
+                                        p.WaitForExit();
+                                    }
                                 }
                                 // Assume we updated or the user dismissed it. Set cooldown.
                                 App.Settings.LastGShadeVersionCheckTimestamp = DateTime.Now;
