@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -1375,15 +1375,15 @@ namespace XIVLauncher.Windows.ViewModel
                 switch (sex.Kind)
                 {
                     case NotEnoughSpaceException.SpaceKind.Patches:
-                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceError", "There is not enough space on your drive to download patches.\n\nYou can change the location patches are downloaded to in the settings.\n\nRequired:{0}\nFree:{1}"), bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
+                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceError", "There is not enough free space on the disk containing the Patch Download Directory.\n\n{0}\n\nYou can change the location patches are downloaded to by going into the launcher settings and selecting the Patching tab.\n\nRequired:{1}\nFree:{2}"), App.Settings.PatchPath, bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
                         break;
 
                     case NotEnoughSpaceException.SpaceKind.AllPatches:
-                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceErrorAll", "There is not enough space on your drive to download all patches.\n\nYou can change the location patches are downloaded to in the XIVLauncher settings.\n\nRequired:{0}\nFree:{1}"), bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
+                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceErrorAll", "There is not enough free space on the disk containing the Patch Download Directory.\n\n{0}\n\nYou can change the location patches are downloaded to by going into the launcher settings and selecting the Patching tab.\n\nRequired:{1}\nFree:{2}"), App.Settings.PatchPath, bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
                         break;
 
                     case NotEnoughSpaceException.SpaceKind.Game:
-                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceGameError", "There is not enough space on your drive to install patches.\n\nYou can change the location the game is installed to in the settings.\n\nRequired:{0}\nFree:{1}"), bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
+                        CustomMessageBox.Show(string.Format(Loc.Localize("FreeSpaceGameError", "There is not enough free space on the disk containing the game install path you have selected.\n\n{0}\n\nYou can change the game install path by going into the launcher settings and selecting the Game tab.\n\nRequired:{1}\nFree:{2}"), App.Settings.GamePath, bytesRequired, bytesFree), "XIVLauncher Error", MessageBoxButton.OK, MessageBoxImage.Error, parentWindow: _window);
                         break;
 
                     default:

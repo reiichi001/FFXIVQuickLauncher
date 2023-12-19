@@ -596,15 +596,15 @@
     "description": "<TryHandlePatchAsync>d__34.MoveNext"
   },
   "FreeSpaceError": {
-    "message": "There is not enough space on your drive to download patches.\n\nYou can change the location patches are downloaded to in the settings.\n\nRequired:{0}\nFree:{1}",
+    "message": "There is not enough free space on the disk containing the Patch Download Directory.\n\n{0}\n\nYou can change the location patches are downloaded to by going into the launcher settings and selecting the Patching tab.\n\nRequired:{1}\nFree:{2}",
     "description": "<TryHandlePatchAsync>d__34.MoveNext"
   },
   "FreeSpaceErrorAll": {
-    "message": "There is not enough space on your drive to download all patches.\n\nYou can change the location patches are downloaded to in the XIVLauncher settings.\n\nRequired:{0}\nFree:{1}",
+    "message": "There is not enough free space on the disk containing the Patch Download Directory.\n\n{0}\n\nYou can change the location patches are downloaded to by going into the launcher settings and selecting the Patching tab.\n\nRequired:{1}\nFree:{2}",
     "description": "<TryHandlePatchAsync>d__34.MoveNext"
   },
   "FreeSpaceGameError": {
-    "message": "There is not enough space on your drive to install patches.\n\nYou can change the location the game is installed to in the settings.\n\nRequired:{0}\nFree:{1}",
+    "message": "There is not enough free space on the disk containing the game install path you have selected.\n\n{0}\n\nYou can change the game install path by going into the launcher settings and selecting the Game tab.\n\nRequired:{1}\nFree:{2}",
     "description": "<TryHandlePatchAsync>d__34.MoveNext"
   },
   "LoginNoOauthTitle": {
